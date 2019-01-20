@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=6.7.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.7.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.7.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.7.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.7.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.7.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="一、数组类型 [n]T 表示拥有 n 个 T 类型的值的数组。表达式  var a [10]int会将变量 a 声明为拥有 10 个整数的数组。数组的长度是其类型的一部分，因此数组不能改变大小。这看起来是个限制，不过没关系，Go 提供了更加便利的方式来使用数组(切片)。123456789101112131415161718192021222324252627func ArrayDemo()  &amp;#">
+<meta name="keywords" content="Go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go(四)指针和结构体数组、切片、Map">
+<meta property="og:url" content="https://ywzou.github.io/2019/01/19/go/go-arr-slice-map/index.html">
+<meta property="og:site_name" content="ywzou">
+<meta property="og:description" content="一、数组类型 [n]T 表示拥有 n 个 T 类型的值的数组。表达式  var a [10]int会将变量 a 声明为拥有 10 个整数的数组。数组的长度是其类型的一部分，因此数组不能改变大小。这看起来是个限制，不过没关系，Go 提供了更加便利的方式来使用数组(切片)。123456789101112131415161718192021222324252627func ArrayDemo()  &amp;#">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-01-20T11:22:05.857Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Go(四)指针和结构体数组、切片、Map">
+<meta name="twitter:description" content="一、数组类型 [n]T 表示拥有 n 个 T 类型的值的数组。表达式  var a [10]int会将变量 a 声明为拥有 10 个整数的数组。数组的长度是其类型的一部分，因此数组不能改变大小。这看起来是个限制，不过没关系，Go 提供了更加便利的方式来使用数组(切片)。123456789101112131415161718192021222324252627func ArrayDemo()  &amp;#">
+
+
+
+
+
+
+  <link rel="canonical" href="https://ywzou.github.io/2019/01/19/go/go-arr-slice-map/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Go(四)指针和结构体数组、切片、Map | ywzou</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ywzou</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">ywzou blog</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://ywzou.github.io/2019/01/19/go/go-arr-slice-map/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ywzou">
+      <meta itemprop="description" content="ywzou space">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ywzou">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Go(四)指针和结构体数组、切片、Map
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-01-19 19:19:51" itemprop="dateCreated datePublished" datetime="2019-01-19T19:19:51+08:00">2019-01-19</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-01-20 19:22:05" itemprop="dateModified" datetime="2019-01-20T19:22:05+08:00">2019-01-20</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/编程语言/" itemprop="url" rel="index"><span itemprop="name">编程语言</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="一、数组"><a href="#一、数组" class="headerlink" title="一、数组"></a>一、数组</h1><p>类型 [n]T 表示拥有 n 个 T 类型的值的数组。<br>表达式</p>
+<blockquote>
+<p>var a [10]int<br>会将变量 a 声明为拥有 10 个整数的数组。<br>数组的长度是其类型的一部分，因此数组不能改变大小。这看起来是个限制，不过没关系，Go 提供了更加便利的方式来使用数组(切片)。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ArrayDemo</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	<span class="comment">//声明一个长度为2的数组</span></span><br><span class="line">	<span class="keyword">var</span> arr [<span class="number">2</span>]<span class="keyword">string</span></span><br><span class="line">	arr[<span class="number">0</span>] = <span class="string">"Go"</span></span><br><span class="line">	arr[<span class="number">1</span>] = <span class="string">"Language"</span></span><br><span class="line">	fmt.Println(arr) <span class="comment">//[Go Language]</span></span><br><span class="line">	fmt.Println(arr[<span class="number">0</span>],arr[<span class="number">1</span>]) <span class="comment">//Go Language</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//遍历</span></span><br><span class="line">	length := <span class="built_in">len</span>(arr) <span class="comment">//获取长度</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length; i++ &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"遍历 index[%d], value = %s \n"</span>, i, arr[i])</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//声明并赋值</span></span><br><span class="line">	arr2 := [<span class="number">3</span>]<span class="keyword">int</span>&#123;<span class="number">3</span>, <span class="number">7</span>, <span class="number">8</span>&#125;</span><br><span class="line">	fmt.Println(arr2) <span class="comment">//[3 7 8]</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//遍历</span></span><br><span class="line">	<span class="keyword">for</span> v := <span class="keyword">range</span> arr2&#123;</span><br><span class="line">		fmt.Printf(<span class="string">"range 遍历 value = %d \n"</span>, v)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//声明一个不定长度的数组</span></span><br><span class="line">	arr3 := [...]<span class="keyword">int</span>&#123;<span class="number">3</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">5</span>, <span class="number">6</span>&#125;</span><br><span class="line">	fmt.Println(arr3) <span class="comment">//[3 7 8]</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<h1 id="二、切片"><a href="#二、切片" class="headerlink" title="二、切片"></a>二、切片</h1><p>数组的大小都是固定的。而切片则为数组元素提供动态大小的、灵活的视角。在实践中，切片比数组更常用。<br>类型 []T 表示一个元素类型为 T 的切片。<br>切片通过两个下标来界定，即一个上界和一个下界，二者以冒号分隔：</p>
+<blockquote>
+<p>a[low : high]</p>
+</blockquote>
+<p>它会选择一个半开区间，包括第一个元素，但排除最后一个元素。<br>以下表达式创建了一个切片，它包含 a 中下标从 1 到 3 的元素：</p>
+<blockquote>
+<p>a[1:4]</p>
+</blockquote>
+<p>切片拥有 <code>长度len</code> 和 <code>容量cap</code>。切片的长度就是它所包含的元素个数,容量是从它的第一个元素开始数，到其底层数组元素末尾的个数。长度和容量可通过表达式 <code>len(s)</code> 和 <code>cap(s)</code> 来获取</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">SliceDemo</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	fmt.Println(<span class="string">"切片 slice ..."</span>)</span><br><span class="line">	<span class="comment">//声明一个切片</span></span><br><span class="line">	arr := []<span class="keyword">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>&#125;</span><br><span class="line">	fmt.Println(arr)<span class="comment">//[1 2 3 4 5 6]</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 切片遍历</span></span><br><span class="line">	<span class="keyword">for</span> i, v := <span class="keyword">range</span> arr &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"index = %d, value = %d\n"</span>, i, v)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 切片遍历 下标或值赋予 '_' 来忽略它</span></span><br><span class="line">	<span class="keyword">for</span> _, v := <span class="keyword">range</span> arr &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"value = %d\n"</span>, v)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取切片</span></span><br><span class="line">	<span class="keyword">var</span> slice []<span class="keyword">int</span> = arr[:] <span class="comment">//全部元素</span></span><br><span class="line">	fmt.Println(slice)<span class="comment">//[1 2 3 4 5 6]</span></span><br><span class="line"></span><br><span class="line">	slice = arr[:<span class="number">4</span>] <span class="comment">// [0,4)元素</span></span><br><span class="line">	fmt.Println(slice)<span class="comment">//[1 2 3 4]</span></span><br><span class="line"></span><br><span class="line">	slice = arr[<span class="number">3</span>:] <span class="comment">// [3:5] 元素</span></span><br><span class="line">	fmt.Println(slice) <span class="comment">//[4 5 6]</span></span><br><span class="line"></span><br><span class="line">	slice = arr[<span class="number">1</span>:<span class="number">4</span>] <span class="comment">// 索引 (1,4] 元素</span></span><br><span class="line">	fmt.Println(slice) <span class="comment">//[2 3 4]</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//声明一个slice</span></span><br><span class="line">	<span class="keyword">var</span> slice2 []<span class="keyword">int</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//像slice其添加值</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		printSlice(slice2)</span><br><span class="line">		slice2 = <span class="built_in">append</span>(slice2, i*<span class="number">2</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//声明一个长度len为3 类型为int的 slice</span></span><br><span class="line">	slice3 := <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">3</span>)</span><br><span class="line">	printSlice(slice3)</span><br><span class="line"></span><br><span class="line">	<span class="comment">//声明一个长度len为3 cap为8 类型为int的 slice</span></span><br><span class="line">	slice4 := <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">3</span>, <span class="number">8</span>)</span><br><span class="line">	printSlice(slice4)</span><br><span class="line"></span><br><span class="line">	<span class="comment">//将slice copy到slice3</span></span><br><span class="line">	<span class="built_in">copy</span>(slice3, slice)</span><br><span class="line">	fmt.Println(slice3)<span class="comment">//[2 3 4]</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//删除下标为2的值</span></span><br><span class="line">	slice3 = deleteElement(slice3,<span class="number">2</span>)</span><br><span class="line">	fmt.Println(slice3)<span class="comment">//[2 4]</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//修改下标为1的值</span></span><br><span class="line">	updateElement(slice3,<span class="number">1</span>, <span class="number">100</span>)</span><br><span class="line">	fmt.Println(slice3)<span class="comment">//[2 100]</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 修改slice的值</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">updateElement</span><span class="params">(s []<span class="keyword">int</span>, index <span class="keyword">int</span>, val <span class="keyword">int</span>)</span></span>&#123;</span><br><span class="line">	s[index] = val</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//删除元素 s 要删除的原始数据 index为要删除的索引下标</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">deleteElement</span><span class="params">(s []<span class="keyword">int</span>, index <span class="keyword">int</span>)</span> []<span class="title">int</span></span> &#123;</span><br><span class="line">	low := index - <span class="number">1</span></span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">append</span>(s[:low],s[index:]...)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//注意 这个类型 []int 并不是数组 而是 切片slice</span></span><br><span class="line"><span class="comment">// len 长度</span></span><br><span class="line"><span class="comment">// cap slice的内部机制 可理解为预留长度 容量</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">printSlice</span><span class="params">(s []<span class="keyword">int</span>)</span></span>  &#123;</span><br><span class="line">	fmt.Printf(<span class="string">"value = %v , len = %d , cap = %d \n"</span> , s, <span class="built_in">len</span>(s), <span class="built_in">cap</span>(s))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="三、Map"><a href="#三、Map" class="headerlink" title="三、Map"></a>三、Map</h1><p>映射将键映射到值，键不能为空。零值为 nil 。nil 映射既没有键，也不能添加键。make 函数会返回给定类型的映射，并将其初始化备用。<br>在映射 m 中插入或修改元素：</p>
+<blockquote>
+<p>m[key] = elem</p>
+</blockquote>
+<p>获取元素：</p>
+<blockquote>
+<p>elem = m[key]</p>
+</blockquote>
+<p>删除元素：</p>
+<blockquote>
+<p>delete(m, key)</p>
+</blockquote>
+<p>通过双赋值检测某个键是否存在：</p>
+<blockquote>
+<p>elem, ok = m[key]</p>
+</blockquote>
+<p>若 key 在 m 中，ok 为 true ；否则，ok 为 false。<br>若 key 不在映射中，那么 elem 是该映射元素类型的零值。<br>同样的，当从映射中读取某个不存在的键时，结果是映射的元素类型的零值。<br>注 ：若 elem 或 ok 还未声明，你可以使用短变量声明：</p>
+<p>elem, ok := m[key]<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">	name <span class="keyword">string</span></span><br><span class="line">	age <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">MapDemo</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	<span class="comment">//声明一个映射 键类型为string 值类型为int</span></span><br><span class="line">	<span class="keyword">var</span> m = <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">int</span>&#123;</span><br><span class="line">		<span class="string">"age"</span>: <span class="number">20</span>,</span><br><span class="line">		<span class="string">"height"</span> : <span class="number">180</span>,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Println(m)<span class="comment">//map[age:20 height:180]</span></span><br><span class="line">	fmt.Println(m[<span class="string">"age"</span>], m[<span class="string">"height"</span>], m[<span class="string">"width"</span>])<span class="comment">//20 180 0</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//遍历</span></span><br><span class="line">	<span class="keyword">for</span> k,v := <span class="keyword">range</span> m &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"key = %s , val = % d \n"</span> ,k , v)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	m2 := <span class="keyword">map</span>[<span class="keyword">string</span>]User&#123;</span><br><span class="line">		<span class="string">"A"</span>: &#123;name:<span class="string">"张三"</span>, age: <span class="number">20</span>&#125;,</span><br><span class="line">		<span class="string">"B"</span>: &#123;name:<span class="string">"李四"</span>, age: <span class="number">80</span>&#125;,</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(m2)<span class="comment">//map[A:&#123;张三 20&#125; B:&#123;李四 80&#125;]</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//获取元素</span></span><br><span class="line">	elem := m2[<span class="string">"A"</span>]</span><br><span class="line">	fmt.Println(elem)<span class="comment">//&#123;张三 20&#125;</span></span><br><span class="line">	fmt.Println(elem.age,elem.name)<span class="comment">//20 张三</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//有值才取出</span></span><br><span class="line">	<span class="keyword">if</span> elem,ok := m2[<span class="string">"C"</span>]; ok &#123;</span><br><span class="line">		fmt.Println(elem)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//修改值</span></span><br><span class="line">	m2[<span class="string">"A"</span>] = User&#123;name:<span class="string">"王麻子"</span>,age:<span class="number">34</span>&#125;</span><br><span class="line">	fmt.Println(m2)<span class="comment">//map[A:&#123;王麻子 34&#125; B:&#123;李四 80&#125;]</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//删除元素</span></span><br><span class="line">	<span class="built_in">delete</span>(m2,<span class="string">"A"</span>)</span><br><span class="line">	fmt.Println(m2)<span class="comment">//map[B:&#123;李四 80&#125;]</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Go/" rel="tag"># Go</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/19/go/go-pointer-struct/" rel="next" title="Go(三)指针和结构体">
+                <i class="fa fa-chevron-left"></i> Go(三)指针和结构体
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/19/go/go-funval-closure/" rel="prev" title="Go(五)函数值和闭包">
+                Go(五)函数值和闭包 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ywzou</p>
+              <p class="site-description motion-element" itemprop="description">ywzou space</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                    <span class="site-state-item-count">1</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/ywzou" title="GitHub &rarr; https://github.com/ywzou" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一、数组"><span class="nav-number">1.</span> <span class="nav-text">一、数组</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二、切片"><span class="nav-number">2.</span> <span class="nav-text">二、切片</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#三、Map"><span class="nav-number">3.</span> <span class="nav-text">三、Map</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ywzou</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v6.7.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/src/utils.js?v=6.7.0"></script>
+
+  <script src="/js/src/motion.js?v=6.7.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/src/affix.js?v=6.7.0"></script>
+
+  <script src="/js/src/schemes/pisces.js?v=6.7.0"></script>
+
+
+
+
+  
+  <script src="/js/src/scrollspy.js?v=6.7.0"></script>
+<script src="/js/src/post-details.js?v=6.7.0"></script>
+
+
+
+  
+
+
+  <script src="/js/src/bootstrap.js?v=6.7.0"></script>
+
+
+
+  
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
